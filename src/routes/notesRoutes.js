@@ -1,6 +1,9 @@
 const notesRoutes = require("express").Router();
 const NotesControllers = require("../controllers/NotesControllers");
 const notesControllers = new NotesControllers();
+const ensureAuthenticated = require("../middleware/ensureAuthenticated");
+
+notesRoutes.use(ensureAuthenticated);
 
 notesRoutes.post("/:user_id", notesControllers.create);
 notesRoutes.get("/:id", notesControllers.show);
