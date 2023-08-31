@@ -19,67 +19,66 @@ class UsersControllers {
     const hashedPassword = await hash(password, 8);
 
     await database.run(
-      "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+      `INSERT INTO users (name, email, password) VALUES (?, ?, ?)`,
       [name, email, hashedPassword]
     );
 
-    return res.status(201).json({});
+    return res.json();
   }
 
   async update(req, res) {
-    const user_id = req.user.id;
     const { name, email, old_password, password } = req.body;
     const database = await sqliteConnection();
+    const user_id = req.user.id;
 
-    const user = await database.get("SELECT * FROM users WHERE id = ?", [
+    const user = await database.get(`SELECT * FROM users WHERE id=?`, [
       user_id,
     ]);
 
     if (!user) {
-      throw new AppError("User was not found");
+      throw new AppError("User not found.");
     }
 
-    const checkEmailIsRegistered = await database.get(
-      "SELECT * FROM users WHERE email =?",
+    const checkIfEmailWasRegistered = await database.get(
+      `SELECT * FROM users WHERE email=?`,
       [email]
     );
 
-    if (checkEmailIsRegistered && checkEmailIsRegistered.id === user.id) {
-      throw new AppError("This Email is already registered");
+    if (checkIfEmailWasRegistered && checkIfEmailWasRegistered.id !== user.id) {
+      throw new AppError("This email was already registered.");
     }
 
     user.name = name ?? user.name;
     user.email = email ?? user.email;
 
-    if (password && !old_password) {
-      throw new AppError("Old password must be provided to set a new password");
+    if ((password && !old_password) || (!password && old_password)) {
+      throw new AppError("Old password and new password must be provided.");
     }
 
     if (password && old_password) {
-      const checkOldPassword = await compare(old_password, user.password);
+      const passwordMatch = await compare(old_password, user.password);
 
-      if (!checkOldPassword) {
-        throw new AppError("Old password is not correct");
+      if (!passwordMatch) {
+        throw new AppError("Password is incorrect");
       }
 
-      const hashedPassword = await hash(password, 8);
+      const passwordHashed = await hash(password, 8);
 
-      user.password = hashedPassword;
+      user.password = passwordHashed;
     }
 
     await database.run(
       `
-    UPDATE users SET 
-    name =?,
-    email=?,
-    password=?,
-    updated_at = DATETIME('NOW')
-    WHERE id =?`,
+      UPDATE users SET
+      name=?,
+      email=?,
+      password=?,
+      updated_at = DATETIME('NOW')
+      WHERE id=?`,
       [user.name, user.email, user.password, user_id]
     );
 
     return res.json();
   }
 }
-
 module.exports = UsersControllers;
