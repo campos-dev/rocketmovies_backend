@@ -62,6 +62,7 @@ class NotesControllers {
           .whereIn("name", filteredTags)
           .whereLike("notes.title", `%${title}%`)
           .innerJoin("notes", "notes.id", "tags.note_id")
+          .groupBy("notes.id")
           .orderBy("notes.title");
       } else {
         notes = await knex("tags")
@@ -70,6 +71,7 @@ class NotesControllers {
           .whereIn("name", filteredTags)
           .whereLike("notes.title", `%${title}`)
           .innerJoin("notes", "notes.id", "tags.note_id")
+          .groupBy("notes.id")
           .orderBy("notes.title");
       }
     } else {
@@ -77,11 +79,13 @@ class NotesControllers {
         notes = await knex("notes")
           .where({ user_id, rating })
           .whereLike("title", `%${title}%`)
+          .groupBy("notes.id")
           .orderBy("title");
       } else {
         notes = await knex("notes")
           .where({ user_id })
           .whereLike("title", `%${title}%`)
+          .groupBy("notes.id")
           .orderBy("title");
       }
     }
@@ -90,7 +94,7 @@ class NotesControllers {
     const notesWithTags = notes.map((note) => {
       const tagsFromNote = userTags.filter((tag) => note.id === tag.note_id);
       return {
-        ...notes,
+        ...note,
         tag: tagsFromNote,
       };
     });
