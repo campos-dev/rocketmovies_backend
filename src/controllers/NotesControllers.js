@@ -5,6 +5,18 @@ class NotesControllers {
     const { title, description, rating, tags = [] } = req.body;
     const user_id = req.user.id;
 
+    const existingNote = await knex("notes")
+      .where({ user_id })
+      .whereRaw("LOWER(title) = ?", title.toLowerCase())
+      .first();
+
+    if (existingNote) {
+      return res.status(400).json({
+        status: "error",
+        message: "A movie with this title already exists.",
+      });
+    }
+
     const [note_id] = await knex("notes").insert({
       title,
       description,
