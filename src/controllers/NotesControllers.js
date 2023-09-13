@@ -56,7 +56,13 @@ class NotesControllers {
       const filteredTags = tags.split(",").map((tag) => tag.trim());
       if (rating) {
         notes = await knex("tags")
-          .select(["notes.id", "notes.title", "notes.user_id"])
+          .select([
+            "notes.id",
+            "notes.title",
+            "notes.user_id",
+            "notes.description",
+            "notes.rating",
+          ])
           .where("notes.user_id", user_id)
           .where("notes.rating", rating)
           .whereIn("name", filteredTags)
@@ -66,7 +72,13 @@ class NotesControllers {
           .orderBy("notes.title");
       } else {
         notes = await knex("tags")
-          .select(["notes.id", "notes.title", "notes.user_id"])
+          .select([
+            "notes.id",
+            "notes.title",
+            "notes.user_id",
+            "notes.description",
+            "notes.rating",
+          ])
           .where("notes.user_id", user_id)
           .whereIn("name", filteredTags)
           .whereLike("notes.title", `%${title}`)
